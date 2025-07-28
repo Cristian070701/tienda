@@ -141,6 +141,17 @@
             border-bottom: 1px solid #eee;
         }
 
+        .checkout-btn {
+            background-color: #ffc107;
+            color: #000;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .checkout-btn:hover {
+            background-color: #e0a800;
+        }
+
         .notification {
             position: fixed;
             top: 100px;
@@ -161,6 +172,131 @@
             margin-bottom: 20px;
             border-radius: 5px;
             display: none;
+        }
+
+        /* Estilos para gestión de pedidos */
+        .orders-section {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .orders-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .order-card {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .order-id {
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .order-status {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-pendiente {
+            background-color: #ffc107;
+            color: #000;
+        }
+
+        .status-procesando {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        .status-enviado {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .status-entregado {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .order-items {
+            margin: 10px 0;
+        }
+
+        .order-total {
+            font-weight: bold;
+            color: #e74c3c;
+            text-align: right;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: none;
+            border-radius: 10px;
+            width: 400px;
+            max-width: 90%;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: black;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            box-sizing: border-box;
         }
     </style>
 </head>
@@ -202,6 +338,14 @@
         <div id="results-container">
             <!-- los resultados se mostrarán aquí -->
         </div>
+
+        <!-- Sección de pedidos -->
+        <div class="orders-section">
+            <div class="orders-title">Mis Pedidos</div>
+            <div id="orders-container">
+                <p>No hay pedidos realizados</p>
+            </div>
+        </div>
     </div>
 
     <!-- carrito de compras -->
@@ -211,6 +355,38 @@
             <p>El carrito está vacío</p>
         </div>
         <div id="cart-total">Total: $0</div>
+        <button class="checkout-btn" onclick="showCheckoutModal()" id="checkout-button" style="display: none;">
+            Finalizar Compra
+        </button>
+    </div>
+
+    <!-- Modal de checkout -->
+    <div id="checkout-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeCheckoutModal()">&times;</span>
+            <h2>Finalizar Pedido</h2>
+            <form id="checkout-form">
+                <div class="form-group">
+                    <label for="customer-name">Nombre:</label>
+                    <input type="text" id="customer-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="customer-email">Email:</label>
+                    <input type="email" id="customer-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="customer-address">Dirección:</label>
+                    <input type="text" id="customer-address" required>
+                </div>
+                <div class="form-group">
+                    <label for="customer-phone">Teléfono:</label>
+                    <input type="tel" id="customer-phone" required>
+                </div>
+                <button type="submit" style="width: 100%; background-color: #28a745;">
+                    Confirmar Pedido
+                </button>
+            </form>
+        </div>
     </div>
 
     <!-- notificaciones -->
@@ -252,6 +428,106 @@
             }
         }
 
+        // Clase para gestionar pedidos
+        class Order {
+            constructor(id, items, customerInfo, total) {
+                this.id = id;
+                this.items = items;
+                this.customerInfo = customerInfo;
+                this.total = total;
+                this.date = new Date();
+                this.status = 'pendiente';
+            }
+
+            // Método para crear HTML del pedido
+            createHTML() {
+                const statusClass = `status-${this.status}`;
+                const statusText = this.getStatusText();
+                
+                return `
+                    <div class="order-card">
+                        <div class="order-header">
+                            <div class="order-id">Pedido #${this.id}</div>
+                            <div class="order-status ${statusClass}">${statusText}</div>
+                        </div>
+                        <div><strong>Cliente:</strong> ${this.customerInfo.name}</div>
+                        <div><strong>Email:</strong> ${this.customerInfo.email}</div>
+                        <div><strong>Fecha:</strong> ${this.date.toLocaleDateString()}</div>
+                        <div class="order-items">
+                            <strong>Productos:</strong>
+                            ${this.items.map(item => `<div>• ${item.name} x${item.quantity}</div>`).join('')}
+                        </div>
+                        <div class="order-total">Total: $${this.total.toLocaleString('es-CL')}</div>
+                    </div>
+                `;
+            }
+
+            getStatusText() {
+                const statusMap = {
+                    'pendiente': 'Pendiente',
+                    'procesando': 'Procesando',
+                    'enviado': 'Enviado',
+                    'entregado': 'Entregado'
+                };
+                return statusMap[this.status] || 'Desconocido';
+            }
+
+            // Simular cambio de estado del pedido
+            updateStatus() {
+                const statuses = ['pendiente', 'procesando', 'enviado', 'entregado'];
+                const currentIndex = statuses.indexOf(this.status);
+                if (currentIndex < statuses.length - 1) {
+                    this.status = statuses[currentIndex + 1];
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        // Clase para gestionar todos los pedidos
+        class OrderManager {
+            constructor() {
+                this.orders = [];
+                this.nextOrderId = 1;
+            }
+
+            createOrder(cartItems, customerInfo, total) {
+                const order = new Order(this.nextOrderId++, [...cartItems], customerInfo, total);
+                this.orders.push(order);
+                this.updateDisplay();
+                
+                // Simular progreso del pedido
+                this.simulateOrderProgress(order);
+                
+                return order;
+            }
+
+            simulateOrderProgress(order) {
+                // Cambiar estado cada 10 segundos para demostración
+                const updateInterval = setInterval(() => {
+                    if (order.updateStatus()) {
+                        this.updateDisplay();
+                        console.log('Pedido #' + order.id + ' actualizado a: ' + order.getStatusText());
+                    } else {
+                        clearInterval(updateInterval);
+                    }
+                }, 10000);
+            }
+
+            updateDisplay() {
+                const ordersContainer = document.getElementById('orders-container');
+                
+                if (this.orders.length === 0) {
+                    ordersContainer.innerHTML = '<p>No hay pedidos realizados</p>';
+                } else {
+                    ordersContainer.innerHTML = this.orders
+                        .sort((a, b) => b.date - a.date)
+                        .map(order => order.createHTML())
+                        .join('');
+                }
+            }
+        }
+
         // clase para manejar el carrito
         class ShoppingCart {
             constructor() {
@@ -288,18 +564,28 @@
             updateDisplay() {
                 const cartItemsDiv = document.getElementById('cart-items');
                 const cartTotalDiv = document.getElementById('cart-total');
+                const checkoutButton = document.getElementById('checkout-button');
 
                 if (this.items.length === 0) {
                     cartItemsDiv.innerHTML = '<p>El carrito está vacío</p>';
+                    checkoutButton.style.display = 'none';
                 } else {
                     cartItemsDiv.innerHTML = this.items.map(item => 
                         `<div class="cart-item">
-                            ${item.name} x${item.quantity} - $${item.price * item.quantity}
+                            ${item.name} x${item.quantity} - $${(item.price * item.quantity).toLocaleString('es-CL')}
                         </div>`
                     ).join('');
+                    checkoutButton.style.display = 'block';
                 }
 
-                cartTotalDiv.innerHTML = `Total: $${this.total}`;
+                cartTotalDiv.innerHTML = `Total: $${this.total.toLocaleString('es-CL')}`;
+            }
+
+            // método para vaciar el carrito
+            clear() {
+                this.items = [];
+                this.total = 0;
+                this.updateDisplay();
             }
 
             // método para mostrar notificaciones
@@ -329,8 +615,18 @@
         // variable global para almacenar productos filtrados
         let filteredProducts = [...products];
 
-        // instancia del carrito
+        // instancias globales
         const cart = new ShoppingCart();
+        const orderManager = new OrderManager();
+
+        // Funciones para el modal de checkout
+        function showCheckoutModal() {
+            document.getElementById('checkout-modal').style.display = 'block';
+        }
+
+        function closeCheckoutModal() {
+            document.getElementById('checkout-modal').style.display = 'none';
+        }
 
         // función para buscar productos (DOM)
         function searchProducts() {
@@ -421,6 +717,41 @@
             document.getElementById('product-search').addEventListener('keypress', function(event) {
                 if (event.key === 'Enter') {
                     searchProducts();
+                }
+            });
+
+            // Evento para el formulario de checkout
+            document.getElementById('checkout-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const customerInfo = {
+                    name: document.getElementById('customer-name').value,
+                    email: document.getElementById('customer-email').value,
+                    address: document.getElementById('customer-address').value,
+                    phone: document.getElementById('customer-phone').value
+                };
+
+                // Crear el pedido
+                const order = orderManager.createOrder(cart.items, customerInfo, cart.total);
+                
+                // Limpiar carrito
+                cart.clear();
+                
+                // Cerrar modal y limpiar formulario
+                closeCheckoutModal();
+                this.reset();
+                
+                // Mostrar notificación
+                cart.showNotification(`Pedido #${order.id} creado exitosamente`);
+                
+                console.log('Nuevo pedido creado:', order);
+            });
+
+            // Cerrar modal al hacer clic fuera de él
+            window.addEventListener('click', function(event) {
+                const modal = document.getElementById('checkout-modal');
+                if (event.target === modal) {
+                    closeCheckoutModal();
                 }
             });
         });
