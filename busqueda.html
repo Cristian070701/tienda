@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tienda de Comercio Electrónico</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .search-container {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        #product-search {
+            padding: 10px;
+            width: 300px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .filter-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        select {
+            padding: 8px;
+            margin: 0 10px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+
+        #results-container {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .product-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .product-card img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+
+        .product-name {
+            font-weight: bold;
+            margin: 10px 0;
+            color: #333;
+        }
+
+        .product-price {
+            color: #e74c3c;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .product-category {
+            color: #666;
+            font-size: 12px;
+            margin: 5px 0;
+        }
+
+        .add-to-cart {
+            background-color: #28a745;
+            margin-top: 10px;
+        }
+
+        .add-to-cart:hover {
+            background-color: #218838;
+        }
+
+        .cart-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #fff;
+            border: 2px solid #007bff;
+            border-radius: 5px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            width: 250px;
+        }
+
+        .cart-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #007bff;
+        }
+
+        .cart-item {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .notification {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background-color: #28a745;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .promotion-banner {
+            background-color: #ff6b35;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Tienda de Comercio Electrónico</h1>
+        
+        <!-- banner de promociones -->
+        <div class="promotion-banner" id="promotion-banner">
+            ¡Oferta especial! 20% de descuento en todos los productos
+        </div>
+
+        <!-- contenedor de búsqueda -->
+        <div class="search-container">
+            <input type="text" id="product-search" placeholder="Buscar producto">
+            <button onclick="searchProducts()">Buscar</button>
+        </div>
+
+        <!-- filtros -->
+        <div class="filter-container">
+            <label>Filtrar por categoría:</label>
+            <select id="category-filter" onchange="filterByCategory()">
+                <option value="all">Todas las categorías</option>
+                <option value="electronica">Electrónica</option>
+                <option value="ropa">Ropa</option>
+                <option value="hogar">Hogar</option>
+                <option value="deportes">Deportes</option>
+            </select>
+
+            <label>Ordenar por precio:</label>
+            <select id="price-sort" onchange="sortByPrice()">
+                <option value="none">Sin ordenar</option>
+                <option value="asc">Menor a mayor</option>
+                <option value="desc">Mayor a menor</option>
+            </select>
+        </div>
+
+        <!-- contenedor de resultados -->
+        <div id="results-container">
+            <!-- los resultados se mostrarán aquí -->
+        </div>
+    </div>
+
+    <!-- carrito de compras -->
+    <div class="cart-container">
+        <div class="cart-title">Carrito de Compras</div>
+        <div id="cart-items">
+            <p>El carrito está vacío</p>
+        </div>
+        <div id="cart-total">Total: $0</div>
+    </div>
+
+    <!-- notificaciones -->
+    <div class="notification" id="notification">
+        Producto agregado al carrito
+    </div>
+
+    <script>
+        // sistema de objetos para productos
+        class Product {
+            constructor(id, name, price, category, image, description) {
+                this.id = id;
+                this.name = name;
+                this.price = price;
+                this.category = category;
+                this.image = image;
+                this.description = description;
+            }
+
+            // método para crear el html del producto
+            createHTML() {
+                return `
+                    <div class="product-card" data-category="${this.category}">
+                        <img src="${this.image}" alt="${this.name}">
+                        <div class="product-name">${this.name}</div>
+                        <div class="product-category">${this.category}</div>
+                        <div class="product-price">$${this.price.toLocaleString('es-CL')}</div>
+                        <button class="add-to-cart" onclick="addToCart(${this.id})">
+                            Agregar al Carrito
+                        </button>
+                    </div>
+                `;
+            }
+
+            // método para verificar si coincide con la búsqueda
+            matchesSearch(searchTerm) {
+                return this.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                       this.category.toLowerCase().includes(searchTerm.toLowerCase());
+            }
+        }
+
+        // clase para manejar el carrito
+        class ShoppingCart {
+            constructor() {
+                this.items = [];
+                this.total = 0;
+            }
+
+            // método para agregar producto
+            addItem(product) {
+                const existingItem = this.items.find(item => item.id === product.id);
+                
+                if (existingItem) {
+                    existingItem.quantity += 1;
+                } else {
+                    this.items.push({
+                        id: product.id,
+                        name: product.name,
+                        price: product.price,
+                        quantity: 1
+                    });
+                }
+                
+                this.updateTotal();
+                this.updateDisplay();
+                this.showNotification(`${product.name} agregado al carrito`);
+            }
+
+            // método para calcular total
+            updateTotal() {
+                this.total = this.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            }
+
+            // método para actualizar la visualización del carrito
+            updateDisplay() {
+                const cartItemsDiv = document.getElementById('cart-items');
+                const cartTotalDiv = document.getElementById('cart-total');
+
+                if (this.items.length === 0) {
+                    cartItemsDiv.innerHTML = '<p>El carrito está vacío</p>';
+                } else {
+                    cartItemsDiv.innerHTML = this.items.map(item => 
+                        `<div class="cart-item">
+                            ${item.name} x${item.quantity} - $${item.price * item.quantity}
+                        </div>`
+                    ).join('');
+                }
+
+                cartTotalDiv.innerHTML = `Total: $${this.total}`;
+            }
+
+            // método para mostrar notificaciones
+            showNotification(message) {
+                const notification = document.getElementById('notification');
+                notification.textContent = message;
+                notification.style.display = 'block';
+                
+                setTimeout(() => {
+                    notification.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        // array de productos usando el sistema de objetos
+        const products = [
+            new Product(1, "Smartphone Galaxy", 299000, "electronica", "https://media.falabella.com/falabellaCL/80057252_1/w=800,h=800,fit=pad", "Teléfono inteligente"),
+            new Product(2, "Laptop Dell", 899000, "electronica", "https://m.media-amazon.com/images/I/61zRDADh+YS._AC_SL1500_.jpg", "Computadora portátil"),
+            new Product(3, "Camiseta Nike", 45000, "ropa", "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQMXMtrWtHWlCMMp9mOz9zuMpsoiQGgybGww&s", "Camiseta deportiva"),
+            new Product(4, "Sofá Moderno", 599000, "hogar", "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ5gTzcnNFia7bWcd-gr8m1R3jLRJJbLxtTZA&s", "Sofá de sala"),
+            new Product(5, "Zapatillas Running", 120000, "deportes", "https://sparta.cl/media/catalog/product/z/a/zapatillas-running-hombre-361-kairos-2-gris-lateral.png?optimize=high&bg-color=255,255,255&fit=bounds&height=550&width=600&canvas=600:550", "Zapatillas para correr"),
+            new Product(6, "Tablet iPad", 449000, "electronica", "https://media.falabella.com/falabellaCL/136561037_01/w=800,h=800,fit=pad", "Tablet Apple"),
+            new Product(7, "Jeans Levis", 50000, "ropa", "https://leviscl.vtexassets.com/arquivos/ids/1298163-800-auto?v=638785988340300000&width=800&height=auto&aspect=true", "Pantalón jeans"),
+            new Product(8, "Mesa de Comedor", 299000, "hogar", "https://media.falabella.com/falabellaCL/124127725_01/w=800,h=800,fit=pad", "Mesa de madera"),
+        ];
+
+        // variable global para almacenar productos filtrados
+        let filteredProducts = [...products];
+
+        // instancia del carrito
+        const cart = new ShoppingCart();
+
+        // función para buscar productos (DOM)
+        function searchProducts() {
+            const searchTerm = document.getElementById('product-search').value;
+            
+            if (searchTerm.trim() === '') {
+                filteredProducts = [...products];
+            } else {
+                filteredProducts = products.filter(product => product.matchesSearch(searchTerm));
+            }
+            
+            displayProducts();
+        }
+
+        // función para filtrar por categoría (DOM)
+        function filterByCategory() {
+            const selectedCategory = document.getElementById('category-filter').value;
+            
+            if (selectedCategory === 'all') {
+                filteredProducts = [...products];
+            } else {
+                filteredProducts = products.filter(product => product.category === selectedCategory);
+            }
+            
+            displayProducts();
+        }
+
+        // función para ordenar por precio (DOM)
+        function sortByPrice() {
+            const sortOrder = document.getElementById('price-sort').value;
+            
+            if (sortOrder === 'asc') {
+                filteredProducts.sort((a, b) => a.price - b.price);
+            } else if (sortOrder === 'desc') {
+                filteredProducts.sort((a, b) => b.price - a.price);
+            }
+            
+            displayProducts();
+        }
+
+        // función para mostrar productos (manipulación del DOM)
+        function displayProducts() {
+            const resultsContainer = document.getElementById('results-container');
+            
+            if (filteredProducts.length === 0) {
+                resultsContainer.innerHTML = '<p>No se encontraron productos</p>';
+                return;
+            }
+            
+            resultsContainer.innerHTML = filteredProducts.map(product => product.createHTML()).join('');
+        }
+
+        // función para agregar al carrito
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            if (product) {
+                cart.addItem(product);
+            }
+        }
+
+        // eventos para promociones y notificaciones
+        function showPromotionBanner() {
+            const banner = document.getElementById('promotion-banner');
+            banner.style.display = 'block';
+            
+            setTimeout(() => {
+                banner.style.display = 'none';
+            }, 5000);
+        }
+
+        // evento que se ejecuta cuando la página carga
+        document.addEventListener('DOMContentLoaded', function() {
+            // mostrar todos los productos al cargar
+            displayProducts();
+            
+            // mostrar banner promocional después de 2 segundos
+            setTimeout(showPromotionBanner, 2000);
+            
+            // agregar evento de búsqueda en tiempo real
+            document.getElementById('product-search').addEventListener('input', function() {
+                if (this.value.trim() === '') {
+                    filteredProducts = [...products];
+                    displayProducts();
+                }
+            });
+            
+            // evento para búsqueda con enter
+            document.getElementById('product-search').addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    searchProducts();
+                }
+            });
+        });
+
+        // promociones automáticas cada 10 segundos
+        setInterval(() => {
+            const promotions = [
+                "¡Nueva oferta! 15% de descuento en electrónicos",
+                "¡Envío gratis en compras mayores a $100!",
+                "¡2x1 en toda la sección de ropa!",
+                "¡Descuento especial del 25% por tiempo limitado!"
+            ];
+            
+            const randomPromotion = promotions[Math.floor(Math.random() * promotions.length)];
+            const banner = document.getElementById('promotion-banner');
+            banner.textContent = randomPromotion;
+            showPromotionBanner();
+        }, 10000);
+    </script>
+</body>
+</html>
