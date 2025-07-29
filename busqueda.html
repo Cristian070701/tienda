@@ -298,6 +298,83 @@
             border-radius: 3px;
             box-sizing: border-box;
         }
+
+        /* Estilos para simulación de pagos */
+        .payment-section {
+            margin-top: 20px;
+            padding: 15px;
+            border-top: 2px solid #eee;
+        }
+
+        .payment-methods {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .payment-method {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .payment-method.selected {
+            border-color: #007bff;
+            background-color: #f0f8ff;
+        }
+
+        .card-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .card-input-group input {
+            flex: 1;
+        }
+
+        .processing {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .payment-result {
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .payment-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .payment-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
     </style>
 </head>
 <body>
@@ -382,8 +459,56 @@
                     <label for="customer-phone">Teléfono:</label>
                     <input type="tel" id="customer-phone" required>
                 </div>
-                <button type="submit" style="width: 100%; background-color: #28a745;">
-                    Confirmar Pedido
+
+                <!-- Sección de pago -->
+                <div class="payment-section">
+                    <h3>Método de Pago</h3>
+                    <div class="payment-methods">
+                        <div class="payment-method selected" data-method="card">
+                            💳 Tarjeta
+                        </div>
+                        <div class="payment-method" data-method="transfer">
+                            🏦 Transferencia
+                        </div>
+                    </div>
+
+                    <div id="card-payment" class="payment-form">
+                        <div class="form-group">
+                            <label for="card-number">Número de Tarjeta:</label>
+                            <input type="text" id="card-number" placeholder="1234 5678 9012 3456" maxlength="19" required>
+                        </div>
+                        <div class="card-input-group">
+                            <div class="form-group">
+                                <label for="card-expiry">Vencimiento:</label>
+                                <input type="text" id="card-expiry" placeholder="MM/AA" maxlength="5" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="card-cvv">CVV:</label>
+                                <input type="text" id="card-cvv" placeholder="123" maxlength="4" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="card-name">Nombre en la Tarjeta:</label>
+                            <input type="text" id="card-name" placeholder="Juan Pérez" required>
+                        </div>
+                    </div>
+
+                    <div id="transfer-payment" class="payment-form" style="display: none;">
+                        <p>Se generarán los datos para transferencia bancaria tras confirmar el pedido.</p>
+                    </div>
+                </div>
+
+                <div id="payment-processing" style="display: none;">
+                    <div class="processing">
+                        <div class="spinner"></div>
+                        <p>Procesando pago...</p>
+                    </div>
+                </div>
+
+                <div id="payment-result"></div>
+
+                <button type="submit" style="width: 100%; background-color: #28a745;" id="confirm-order-btn">
+                    Confirmar Pedido y Pagar
                 </button>
             </form>
         </div>
